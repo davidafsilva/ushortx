@@ -3,6 +3,8 @@ package pt.davidafsilva.ushortx.http;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -62,10 +64,10 @@ public class RestVerticle extends AbstractVerticle {
         // the request data
         new JsonObject().put("hash", hash),
         // the result callback
-        result -> {
+        (AsyncResult<Message<JsonObject>> result) -> {
           if (result.succeeded()) {
             // extract the json data
-            final JsonObject json = (JsonObject) result.result().body();
+            final JsonObject json = result.result().body();
 
             // redirect to the url
             context.response()
@@ -98,10 +100,10 @@ public class RestVerticle extends AbstractVerticle {
         // the request data
         new JsonObject().put("url", url),
         // the result callback
-        result -> {
+        (AsyncResult<Message<JsonObject>> result) -> {
           if (result.succeeded()) {
             // extract the json data
-            final JsonObject json = (JsonObject) result.result().body();
+            final JsonObject json = result.result().body();
 
             // write the response
             context.response().setStatusCode(200).write(
