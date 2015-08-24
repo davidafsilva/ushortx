@@ -35,9 +35,12 @@ public class RestVerticle extends AbstractVerticle {
     router.post("/s/:url").handler(this::shortenUrlRequest);
 
     // create the actual http server
+    final int port = config().getInteger("http_port", 8080);
     server = vertx.createHttpServer()
         .requestHandler(router::accept)
-        .listen(config().getInteger("http_port", 8080));
+        .listen();
+
+    System.out.printf("http server listening at port %d%n", port);
   }
 
   /**
