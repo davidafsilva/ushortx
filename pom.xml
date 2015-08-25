@@ -16,7 +16,7 @@
         <url>https://github.com/davidafsilva/ushortx</url>
     </scm>
     <modules>
-        <module>http-server</module>
+        <module>http</module>
         <module>persistence</module>
     </modules>
 
