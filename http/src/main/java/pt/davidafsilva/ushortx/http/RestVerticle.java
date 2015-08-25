@@ -2,6 +2,8 @@ package pt.davidafsilva.ushortx.http;
 
 import org.apache.commons.validator.routines.UrlValidator;
 
+import java.util.Optional;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
@@ -20,6 +22,12 @@ public class RestVerticle extends AbstractVerticle {
 
   // the URL validator
   private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[]{"http", "https"});
+
+  // the default salt value - should not be used!!!
+  private static final String DEFAULT_SALT = "Please change me!! I'll make you a sandwich!";
+
+  // the url format
+  private static final String URL_REDIRECT_FORMAT = "http://%s/%s";
 
   // the http server
   private HttpServer server;
@@ -59,10 +67,18 @@ public class RestVerticle extends AbstractVerticle {
       return;
     }
 
+    // reverse the hash
+    final Optional<Long> id = Hash.reverse(config().getString("salt", DEFAULT_SALT), hash);
+    if (!id.isPresent()) {
+      // fail with a 404
+      context.response().setStatusCode(404).end();
+      return;
+    }
+
     // query the persistence for the hash
-    vertx.eventBus().send("ushortx-persistence-getUrl",
+    vertx.eventBus().send("ushortx-persistence-findById",
         // the request data
-        new JsonObject().put("hash", hash),
+        new JsonObject().put("id", id.get()),
         // the result callback
         (AsyncResult<Message<JsonObject>> result) -> {
           if (result.succeeded()) {
@@ -96,7 +112,7 @@ public class RestVerticle extends AbstractVerticle {
     }
 
     // send the request or fail the request
-    vertx.eventBus().send("ushortx-persistence-shortenerUrl",
+    vertx.eventBus().send("ushortx-persistence-save",
         // the request data
         new JsonObject().put("url", url),
         // the result callback
@@ -105,12 +121,18 @@ public class RestVerticle extends AbstractVerticle {
             // extract the json data
             final JsonObject json = result.result().body();
 
+            // get the id
+            final long id = json.getLong("id");
+
+            // generate an hash for the identifier
+            final String hash = Hash.generate(config().getString("salt", DEFAULT_SALT), id);
+
             // write the response
             context.response().setStatusCode(200).write(
                 new JsonObject()
                     .put("original", url)
-                    .put("shortened", "http://" + context.request().localAddress().toString() +
-                        "/" + json.getString("hash"))
+                    .put("shortened", String.format(URL_REDIRECT_FORMAT,
+                        context.request().localAddress().toString(), hash))
                     .encode()
             ).end();
           } else {

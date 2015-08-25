@@ -23,7 +23,11 @@
             <artifactId>commons-validator</artifactId>
             <version>${commons-validator.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.hashids</groupId>
+            <artifactId>hashids</artifactId>
+            <version>${hashids.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

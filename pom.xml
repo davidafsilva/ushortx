@@ -31,6 +31,7 @@
         <!-- compile / runtime dependencies -->
         <vertx.version>3.0.0</vertx.version>
         <commons-validator.version>1.4.1</commons-validator.version>
+        <hashids.version>1.0.1</hashids.version>
 
         <!-- test dependencies versions -->
         <junit.version>4.11</junit.version>
