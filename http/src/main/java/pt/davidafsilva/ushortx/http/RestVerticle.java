@@ -96,12 +96,12 @@ public class RestVerticle extends AbstractVerticle {
   private void redirectUrlRequest(final RoutingContext context) {
     // extract the hash
     final String hash = context.request().getParam("hash");
+    LOGGER.info("redirecting request for " + hash);
     // basic hash validation
     if (hash == null || hash.isEmpty()) {
       context.response().setStatusCode(400).end();
       return;
     }
-    LOGGER.info("redirecting request for " + hash);
 
     // reverse the hash
     final Optional<Long> id = Hash.reverse(config().getString("salt", DEFAULT_SALT), hash);
@@ -144,12 +144,12 @@ public class RestVerticle extends AbstractVerticle {
   private void shortenUrlRequest(final RoutingContext context) {
     // extract the url
     final String url = context.request().getParam("url");
+    LOGGER.info("shorten request for " + url);
     // url validation
     if (url == null || !URL_VALIDATOR.isValid(url)) {
       context.response().setStatusCode(400).end();
       return;
     }
-    LOGGER.info("shorten request for " + url);
 
     // send the request or fail the request
     LOGGER.debug("sending url save message for " + url);

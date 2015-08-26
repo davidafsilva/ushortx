@@ -118,7 +118,7 @@ public class DatabaseVerticle extends AbstractVerticle {
             .put("driver_class", config().getString("driver_class", "org.h2.Driver"))
             .put("user", config().getString("user", "ushortx"))
             .put("password", config().getString("password", "shall-not-be-used"))
-            .put("max_pool_size", config().getString("max_pool_size", "20"))
+            .put("max_pool_size", config().getInteger("max_pool_size", 20))
         , "ushortx-ds");
 
     // create the table
