@@ -11,6 +11,12 @@
 
     <artifactId>ushortx-http</artifactId>
 
+    <!-- define our verticle class -->
+    <properties>
+        <main.verticle>pt.davidafsilva.ushortx.http.RestVerticle</main.verticle>
+    </properties>
+
+
     <!-- project dependencies -->
     <dependencies>
         <dependency>
@@ -29,5 +35,19 @@
             <version>${hashids.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- activate the distribution packaging -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -11,6 +11,11 @@
 
     <artifactId>ushortx-persistence</artifactId>
 
+    <!-- define our verticle class -->
+    <properties>
+        <main.verticle>pt.davidafsilva.ushortx.persistence.DatabaseVerticle</main.verticle>
+    </properties>
+
     <!-- project dependencies -->
     <dependencies>
         <dependency>
@@ -20,4 +25,17 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- activate the distribution packaging -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

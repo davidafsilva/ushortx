@@ -1,5 +1,31 @@
 package pt.davidafsilva.ushortx.http;
 
+/*
+ * #%L
+ * ushortx-http
+ * %%
+ * Copyright (C) 2015 David Silva
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
+
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.util.Optional;
@@ -9,6 +35,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -19,6 +47,9 @@ import io.vertx.ext.web.handler.BodyHandler;
  * @author David Silva
  */
 public class RestVerticle extends AbstractVerticle {
+
+  // the logger
+  private static final Logger LOGGER = LoggerFactory.getLogger(RestVerticle.class);
 
   // the URL validator
   private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[]{"http", "https"});
@@ -48,9 +79,13 @@ public class RestVerticle extends AbstractVerticle {
     final int port = config().getInteger("http_port", 8080);
     server = vertx.createHttpServer()
         .requestHandler(router::accept)
-        .listen();
-
-    System.out.printf("http server listening at port %d%n", port);
+        .listen(port, deployedHandler -> {
+          if (deployedHandler.succeeded()) {
+            LOGGER.info(String.format("http server listening at port %s", port));
+          } else {
+            throw new IllegalStateException("unable to start http server", deployedHandler.cause());
+          }
+        });
   }
 
   /**
