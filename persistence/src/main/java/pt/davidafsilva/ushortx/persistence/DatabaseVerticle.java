@@ -68,6 +68,7 @@ public class DatabaseVerticle extends AbstractVerticle {
       (message, connection) -> dbResult -> {
         try {
           if (dbResult.succeeded()) {
+            LOGGER.debug("find query results: " + dbResult.result().getRows());
             if (dbResult.result().getNumRows() == 1) {
               message.reply(dbResult.result().getRows().get(0));
             } else {
@@ -87,6 +88,7 @@ public class DatabaseVerticle extends AbstractVerticle {
       (message, connection) -> dbResult -> {
         try {
           if (dbResult.succeeded()) {
+            LOGGER.debug("save statement result: " + dbResult.result().toJson());
             if (dbResult.result().getUpdated() == 1) {
               // get the saved identifier
               final JsonArray queryParams = new JsonArray().add(message.body().getString("url"));
@@ -122,8 +124,27 @@ public class DatabaseVerticle extends AbstractVerticle {
     // create the table
     createTableStructure(r -> {
       // register the event bus consumers
+      LOGGER.info("registering event consumers..");
       vertx.eventBus().consumer("ushortx-persistence-findById", this::findById);
       vertx.eventBus().consumer("ushortx-persistence-save", this::saveUrl);
+    });
+  }
+
+  /**
+   * Connects to the database and calls the specified handlers, accordingly.
+   *
+   * @param successHandler the success handler
+   * @param errorHandler   the error handler
+   */
+  private void connect(final Handler<SQLConnection> successHandler,
+      final Optional<Handler<Throwable>> errorHandler) {
+    client.getConnection(result -> {
+      if (result.succeeded()) {
+        successHandler.handle(result.result());
+      } else {
+        LOGGER.error("unable to obtain a database connection", result.cause());
+        errorHandler.ifPresent(h -> h.handle(result.cause()));
+      }
     });
   }
 
@@ -134,24 +155,19 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @param readyHandler the handler that shall be called whenever the data structure is created
    */
   private void createTableStructure(final Handler<Void> readyHandler) {
-    client.getConnection(result -> {
-      if (result.failed()) {
-        throw new IllegalStateException("unable to get connection resource to database");
-      }
-
-      // extract the connection
-      final SQLConnection connection = result.result();
-
+    connect(connection -> {
+      LOGGER.info("creating database structure..");
       // create the table
       connection.execute(CREATE_TABLE_STATEMENT, dbResult -> {
         if (dbResult.failed()) {
-          throw new IllegalStateException("unable to create database structure");
+          LOGGER.error("unable to create database structure", dbResult.cause());
+          return;
         }
 
         // call the callback
         readyHandler.handle(null);
       });
-    });
+    }, Optional.empty());
   }
 
   /**
@@ -160,29 +176,23 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @param message the message from where to extract the identifier and to reply from
    */
   private void findById(final Message<JsonObject> message) {
-    client.getConnection(result -> {
-      if (result.succeeded()) {
-        // get the connection
-        final SQLConnection connection = result.result();
-
-        // validate the identifier
-        final Optional<Long> id = Optional.ofNullable(message.body().getLong("id"));
-        if (!id.isPresent()) {
-          connection.close();
-          message.fail(2, "invalid identifier");
-          return;
-        }
-
-        // create the query parameters
-        final JsonArray queryParams = new JsonArray().add(id.get());
-
-        // execute the query
-        connection.queryWithParams(FIND_BY_ID_QUERY, queryParams,
-            FIND_QUERY_RESULT_HANDLER.apply(message, connection));
-      } else {
-        message.fail(1, "unavailable resources");
+    LOGGER.info("incoming find request: " + message.body());
+    connect(connection -> {
+      // validate the identifier
+      final Optional<Long> id = Optional.ofNullable(message.body().getLong("id"));
+      if (!id.isPresent()) {
+        connection.close();
+        message.fail(2, "invalid identifier");
+        return;
       }
-    });
+
+      // create the query parameters
+      final JsonArray queryParams = new JsonArray().add(id.get());
+
+      // execute the query
+      connection.queryWithParams(FIND_BY_ID_QUERY, queryParams,
+          FIND_QUERY_RESULT_HANDLER.apply(message, connection));
+    }, Optional.of(cause -> message.fail(1, "unavailable resources")));
   }
 
   /**
@@ -192,29 +202,23 @@ public class DatabaseVerticle extends AbstractVerticle {
    * @param message the message from where to extract the url data and to reply from
    */
   private void saveUrl(final Message<JsonObject> message) {
-    client.getConnection(result -> {
-      if (result.succeeded()) {
-        // get the connection
-        final SQLConnection connection = result.result();
-
-        // validate the url
-        final Optional<String> url = Optional.ofNullable(message.body().getString("url"));
-        if (!url.isPresent()) {
-          connection.close();
-          message.fail(2, "invalid url");
-          return;
-        }
-
-        // create the update parameters
-        final JsonArray updateParams = new JsonArray().add(url.get());
-
-        // execute the update
-        result.result().updateWithParams(INSERT_URL_STATEMENT, updateParams,
-            INSERT_URL_RESULT_HANDLER.apply(message, connection));
-      } else {
-        message.fail(1, "unavailable resources");
+    LOGGER.info("incoming save request: " + message.body());
+    connect(connection -> {
+      // validate the url
+      final Optional<String> url = Optional.ofNullable(message.body().getString("url"));
+      if (!url.isPresent()) {
+        connection.close();
+        message.fail(2, "invalid url");
+        return;
       }
-    });
+
+      // create the update parameters
+      final JsonArray updateParams = new JsonArray().add(url.get());
+
+      // execute the update
+      connection.updateWithParams(INSERT_URL_STATEMENT, updateParams,
+          INSERT_URL_RESULT_HANDLER.apply(message, connection));
+    }, Optional.of(cause -> message.fail(1, "unavailable resources")));
   }
 
   @Override

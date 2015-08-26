@@ -101,6 +101,7 @@ public class RestVerticle extends AbstractVerticle {
       context.response().setStatusCode(400).end();
       return;
     }
+    LOGGER.info("redirecting request for " + hash);
 
     // reverse the hash
     final Optional<Long> id = Hash.reverse(config().getString("salt", DEFAULT_SALT), hash);
@@ -111,6 +112,7 @@ public class RestVerticle extends AbstractVerticle {
     }
 
     // query the persistence for the hash
+    LOGGER.debug("sending url lookup message for " + hash);
     vertx.eventBus().send("ushortx-persistence-findById",
         // the request data
         new JsonObject().put("id", id.get()),
@@ -119,6 +121,7 @@ public class RestVerticle extends AbstractVerticle {
           if (result.succeeded()) {
             // extract the json data
             final JsonObject json = result.result().body();
+            LOGGER.debug("url for " + hash + " = " + json.getString("url"));
 
             // redirect to the url
             context.response()
@@ -126,6 +129,7 @@ public class RestVerticle extends AbstractVerticle {
                 .putHeader("Location", json.getString("url"))
                 .end();
           } else {
+            LOGGER.error("unable to obtain url for hash " + hash, result.cause());
             // fail with a 404 - assume bad hash
             context.response().setStatusCode(404).end();
           }
@@ -145,8 +149,10 @@ public class RestVerticle extends AbstractVerticle {
       context.response().setStatusCode(400).end();
       return;
     }
+    LOGGER.info("shorten request for " + url);
 
     // send the request or fail the request
+    LOGGER.debug("sending url save message for " + url);
     vertx.eventBus().send("ushortx-persistence-save",
         // the request data
         new JsonObject().put("url", url),
@@ -155,6 +161,7 @@ public class RestVerticle extends AbstractVerticle {
           if (result.succeeded()) {
             // extract the json data
             final JsonObject json = result.result().body();
+            LOGGER.debug(url + " -> " + json);
 
             // get the id
             final long id = json.getLong("id");
@@ -171,6 +178,7 @@ public class RestVerticle extends AbstractVerticle {
                     .encode()
             ).end();
           } else {
+            LOGGER.error("unable to save url", result.cause());
             // fail with an internal error
             context.response().setStatusCode(500).end();
           }
