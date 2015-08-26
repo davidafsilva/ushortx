@@ -143,7 +143,7 @@ public class RestVerticle extends AbstractVerticle {
    */
   private void shortenUrlRequest(final RoutingContext context) {
     // extract the url
-    final String url = context.request().getParam("url");
+    final String url = protocolify(context.request().getParam("url"));
     LOGGER.info("shorten request for " + url);
     // url validation
     if (url == null || !URL_VALIDATOR.isValid(url)) {
@@ -184,6 +184,17 @@ public class RestVerticle extends AbstractVerticle {
             context.response().setStatusCode(500).end();
           }
         });
+  }
+
+  /**
+   * Prepends the http(s):// protocol prefix to the specified url if not present
+   *
+   * @param url the original url
+   * @return the protocolified url
+   */
+  private String protocolify(final String url) {
+    return url == null || url.startsWith("http://") || url.startsWith("https://") ? url
+        : "http://" + url;
   }
 
   @Override

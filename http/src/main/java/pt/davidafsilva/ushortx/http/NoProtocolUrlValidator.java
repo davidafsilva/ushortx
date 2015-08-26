@@ -42,11 +42,4 @@ public final class NoProtocolUrlValidator extends UrlValidator {
   NoProtocolUrlValidator() {
     super(new String[]{"https", "http"});
   }
-
-  @Override
-  public boolean isValid(final String value) {
-    // prepend the protocol, if not in the url
-    return super.isValid(value.startsWith("http://") || value.startsWith("https://") ?
-        value : "http://" + value);
-  }
 }

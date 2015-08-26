@@ -30,6 +30,9 @@ import org.hashids.Hashids;
 
 import java.util.Optional;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 /**
  * The hash utility class for generating and reverting hashes from and to integer. This is achieved
  * by using the {@link Hashids} facility.
@@ -37,6 +40,10 @@ import java.util.Optional;
  * @author David Silva
  */
 public final class Hash {
+
+  // the logger
+  private static final Logger LOGGER = LoggerFactory.getLogger(Hash.class);
+
 
   // the hash facility reference
   // volatile here is required due to our locking/singleton instance retrieval/instantiation
@@ -63,8 +70,14 @@ public final class Hash {
    * @return the original identifier, if applicable
    */
   public static Optional<Long> reverse(final String salt, final String hash) {
-    final long[] ids = getHashFacility(salt).decode(hash);
-    return (ids == null || ids.length != 1) ? Optional.empty() : Optional.of(ids[0]);
+    try {
+      final long[] ids = getHashFacility(salt).decode(hash);
+      return (ids == null || ids.length != 1) ? Optional.empty() : Optional.of(ids[0]);
+    } catch (final Exception e) {
+      LOGGER.warn("invalid hash provided");
+      // invalid hash provided
+      return Optional.empty();
+    }
   }
 
   /**
