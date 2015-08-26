@@ -37,11 +37,10 @@ public final class NoProtocolUrlValidator extends UrlValidator {
 
   /**
    * Default validator constructor.
-   * It calls the underlying constructor with the http and https as supported protocols,
-   * as well as local addresses support.
+   * It calls the underlying constructor with the http and https as supported protocols.
    */
   NoProtocolUrlValidator() {
-    super(new String[]{"https", "http"}, ALLOW_LOCAL_URLS);
+    super(new String[]{"https", "http"});
   }
 
   @Override
