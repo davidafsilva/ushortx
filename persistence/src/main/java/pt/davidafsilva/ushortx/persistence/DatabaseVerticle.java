@@ -53,14 +53,15 @@ public class DatabaseVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseVerticle.class);
 
   // the findById query
-  private static final String FIND_BY_ID_QUERY = "SELECT id,url FROM urls WHERE id=?";
+  private static final String FIND_BY_ID_QUERY = "SELECT ID,URL FROM urls WHERE id=?";
   // the findByUrl query
-  private static final String FIND_BY_URL_QUERY = "SELECT id,url FROM urls WHERE url=?";
+  private static final String FIND_BY_URL_QUERY = "SELECT ID,URL FROM urls WHERE url=?";
   // the insertUrl update statement
-  private static final String INSERT_URL_STATEMENT = "INSERT INTO urls VALUES(?)";
+  private static final String INSERT_URL_STATEMENT = "INSERT INTO URLS(URL) VALUES(?)";
   // the create table statement
   private static final String CREATE_TABLE_STATEMENT = "CREATE TABLE IF NOT EXISTS urls(" +
-      "id BIGINT AUTO_INCREMENT, url VARCHAR(255))";
+      "ID BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, " +
+      "URL VARCHAR(255) NOT NULL UNIQUE )";
 
   // the findById | findByUrl query result handler
   private static final BiFunction<Message<JsonObject>, SQLConnection, Handler<AsyncResult<ResultSet>>>
@@ -70,7 +71,13 @@ public class DatabaseVerticle extends AbstractVerticle {
           if (dbResult.succeeded()) {
             LOGGER.debug("find query results: " + dbResult.result().getRows());
             if (dbResult.result().getNumRows() == 1) {
-              message.reply(dbResult.result().getRows().get(0));
+              // extract the row
+              final JsonObject row = dbResult.result().getRows().get(0);
+
+              // create the reply json and reply
+              message.reply(new JsonObject()
+                  .put("id", row.getLong("ID"))
+                  .put("url", row.getString("URL")));
             } else {
               message.fail(4, "url not found");
             }
