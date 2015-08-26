@@ -170,13 +170,14 @@ public class RestVerticle extends AbstractVerticle {
             final String hash = Hash.generate(config().getString("salt", DEFAULT_SALT), id);
 
             // write the response
-            context.response().setStatusCode(200).write(
-                new JsonObject()
-                    .put("original", url)
-                    .put("shortened", String.format(URL_REDIRECT_FORMAT,
-                        context.request().localAddress().toString(), hash))
-                    .encode()
-            ).end();
+            final String jsonResponse = new JsonObject()
+                .put("original", url)
+                .put("shortened", String.format(URL_REDIRECT_FORMAT,
+                    context.request().localAddress().toString(), hash))
+                .encode();
+            context.response().setStatusCode(200)
+                .putHeader("Content-Type", "application/json")
+                .end(jsonResponse);
           } else {
             LOGGER.error("unable to save url", result.cause());
             // fail with an internal error
