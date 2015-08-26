@@ -36,7 +36,7 @@ import java.util.Optional;
  *
  * @author David Silva
  */
-public class Hash {
+public final class Hash {
 
   // the hash facility reference
   // volatile here is required due to our locking/singleton instance retrieval/instantiation

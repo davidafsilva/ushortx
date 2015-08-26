@@ -52,7 +52,7 @@ public class RestVerticle extends AbstractVerticle {
   private static final Logger LOGGER = LoggerFactory.getLogger(RestVerticle.class);
 
   // the URL validator
-  private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[]{"http", "https"});
+  private static final UrlValidator URL_VALIDATOR = new NoProtocolUrlValidator();
 
   // the default salt value - should not be used!!!
   private static final String DEFAULT_SALT = "Please change me!! I'll make you a sandwich!";
