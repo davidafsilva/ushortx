@@ -105,8 +105,10 @@ public class DatabaseVerticle extends AbstractVerticle {
               message.fail(4, "insert error");
             }
           } else {
-            //TODO: if already exists error (due to concurrent requests) -> findByUrl
-            message.fail(3, "internal database error");
+            // most likely a duplicate registry, try find or fail
+            final JsonArray queryParams = new JsonArray().add(message.body().getString("url"));
+            connection.queryWithParams(FIND_BY_URL_QUERY, queryParams,
+                FIND_QUERY_RESULT_HANDLER.apply(message, connection));
           }
         } finally {
           connection.close();
