@@ -1,4 +1,4 @@
-# ushortx 
+# ushortx [![Build Status](https://jenkins-davidafsilva.rhcloud.com/job/ushortx/badge/icon)](https://jenkins-davidafsilva.rhcloud.com/job/ushortx/)
 A *demo* URL Shortening application using [vertx.io](http://vertx.io).
 
 This application contains two decoupled modules modeled as [Verticles](http://vertx.io/docs/vertx-core/java/#_verticles),
