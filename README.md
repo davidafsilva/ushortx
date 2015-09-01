@@ -14,20 +14,20 @@ Both modules communicate with each other via the [Event bus](http://vertx.io/doc
 
 The modules can be run via command line with either `vertx` or `java -jar` commands:
 ```
-vertx run pt.davidafsilva.ushortx.http.RestVerticle -cp ushortx-http.jar 
-vertx run pt.davidafsilva.ushortx.persistence.DatabaseVerticle -cp ushortx-persistence.jar 
+vertx run pt.davidafsilva.ushortx.http.RestVerticle -cp ushortx-http.jar:lib/ -cluster
+vertx run pt.davidafsilva.ushortx.persistence.DatabaseVerticle -cp ushortx-persistence.jar:lib/ -cluster
 ```
 ```
-java -jar ushortx-http.jar 
-java -jar ushortx-persistence.jar 
+java -jar ushortx-http.jar -cluster
+java -jar ushortx-persistence.jar -cluster
 ```
 
-Append the `-cluster` option to enable the pub-sub event communication between the two verticles, 
-if you're deployment them independently (different JVMs).
+The `-cluster` option is required for the local pub-sub event communication between the two verticles.
 
 ## Configuration
 
 You can specify a configuration file for each module with the `-conf <json_file>` option.
+
 The http module supports the following JSON properties:
 
 | Property  | Possible values  | Default | Notes                                   |
